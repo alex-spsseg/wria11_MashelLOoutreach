@@ -153,5 +153,14 @@
   ],
   "forward_label": "",
   "backward_label": "",
+  "bookmarks": [
+    {
+      "id": "beaver-dam",
+      "name": "Beaver Dam!",
+      "stops": [
+        "img_20261023_111713_00_137"
+      ]
+    }
+  ],
   "field_visit_date": "2026-10-23"
 }

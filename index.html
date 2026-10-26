@@ -942,7 +942,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-26 10:45:55</div>
+  <div id="build-timestamp">Built 2026-10-26 11:06:39</div>
 
   <div id="status-banner"></div>
 
@@ -1905,10 +1905,19 @@
         map: '<svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>',
         stops: '<svg viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></svg>',
         controls: '<svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>',
+        about: '<svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/></svg>',
         views: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="8" height="14" rx="1.5"/><rect x="13" y="5" width="8" height="14" rx="1.5"/></svg>'
       };
 
       var STAGES = {
+        about:
+          '<svg viewBox="0 0 320 124" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+          '<rect x="104" y="20" width="112" height="84" rx="8" fill="#16294f" stroke="#019fc4" stroke-width="1.5"/>' +
+          '<circle cx="124" cy="41" r="6" fill="#019fc4"/>' +
+          '<rect x="138" y="37" width="62" height="6" rx="3" fill="#2c4a86"/>' +
+          '<rect x="118" y="59" width="86" height="5" rx="2.5" fill="#2c4a86"/>' +
+          '<rect x="118" y="72" width="70" height="5" rx="2.5" fill="#2c4a86"/>' +
+          '<rect x="118" y="85" width="52" height="5" rx="2.5" fill="#2c4a86"/></svg>',
         look:
           '<svg viewBox="0 0 320 124" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
           '<defs><linearGradient id="hpsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a4a86"/><stop offset="1" stop-color="#16294f"/></linearGradient></defs>' +
@@ -1978,9 +1987,13 @@
         if (isShown('hotspots-toggle-btn')) {
           look.push('<p>Colored pins in the photo are hotspots. Click one for more detail, or use <b>Hide Hotspots</b> and <b>Show Hotspots</b> to clear them from the view and bring them back.</p>');
         }
+        // The tour's own note (Intro Note in the publisher) gets its own first panel, only when the tour has one.
         var intro = (window.helpTourIntro || '');
-        if (intro) look.unshift('<p class="info-intro"></p>');
-        out.push({ title: 'Look around', icon: STEP_ICONS.look, stage: STAGES.look, body: look.join(''), intro: intro });
+        if (intro) {
+          out.push({ title: 'About this tour', icon: STEP_ICONS.about, stage: STAGES.about,
+                     body: '<p class="info-intro"></p>', intro: intro });
+        }
+        out.push({ title: 'Look around', icon: STEP_ICONS.look, stage: STAGES.look, body: look.join('') });
 
         if (isShown('prev-stop-btn')) {
           out.push({
