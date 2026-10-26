@@ -926,7 +926,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-26 10:24:14</div>
+  <div id="build-timestamp">Built 2026-10-26 10:43:26</div>
 
   <div id="status-banner"></div>
 
@@ -1159,6 +1159,13 @@
                                  // display labels can differ completely once a
                                  // stop's been renamed in Site Tour Manager)
     var updateLinkAllUndoVisibility = function () {}; // set up once the editing tools exist
+    var tourStopSlugs = {}; // normalized site id -> short name for links, e.g. "stop-2"
+    function slugifyStopName(n) {
+      return String(n || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    }
+    function stopLinkToken(sid) {
+      return tourStopSlugs[String(sid).trim().toLowerCase().replace(/[\s-]+/g, '_')] || sid;
+    }
     var activeTourSiteId = null; // which stop is currently showing, for Use This
                                   // View / hotspot editing / Save Hotspots to target
     var activeTourScene = null;  // that stop's live Marzipano scene, for placing
@@ -3612,6 +3619,20 @@
       var a = c.length > 3 ? c[3] / 255 : (fallbackA == null ? 1 : fallbackA);
       return { css: 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')', a: a };
     }
+    // ArcGIS line styles as Leaflet dash arrays, in multiples of the line width so a thick dash stays
+    // proportionate. Solid and unknown styles return null, which Leaflet treats as a solid line.
+    function esriDashArray(style, weight) {
+      var w = Math.max(1, weight || 1);
+      var map = {
+        esriSLSDash: [4, 3], esriSLSShortDash: [3, 1], esriSLSLongDash: [7, 3],
+        esriSLSDot: [1, 2], esriSLSShortDot: [1, 1],
+        esriSLSDashDot: [4, 3, 1, 3], esriSLSShortDashDot: [3, 1, 1, 1],
+        esriSLSLongDashDot: [7, 3, 1, 3], esriSLSDashDotDot: [4, 3, 1, 3, 1, 3],
+        esriSLSShortDashDotDot: [3, 1, 1, 1, 1, 1],
+      };
+      var a = map[style];
+      return a ? a.map(function (n) { return Math.round(n * w * 10) / 10; }).join(' ') : null;
+    }
     function esriSymbolToStyle(sym, baseOpacity) {
       if (!sym) return null;
       var st = {};
@@ -3623,6 +3644,9 @@
         st.opacity = (main ? main.a : 1) * baseOpacity;
         st.weight = Math.max(1, (sym.width || 1) * 1.333);
         st.fill = false;
+        if (sym.style === 'esriSLSNull') st.opacity = 0;
+        var da = esriDashArray(sym.style, st.weight);
+        if (da) { st.dashArray = da; st.lineCap = 'butt'; }
       } else {
         // esriSFS (polygon) and esriSMS (point marker)
         st.fill = !!main && main.a > 0;
@@ -3632,6 +3656,9 @@
         st.opacity = (olc ? olc.a : 1) * baseOpacity;
         st.weight = ol && ol.width != null ? Math.max(ol.width > 0 ? 1 : 0, ol.width * 1.333) : 1;
         if (olc && olc.a === 0) st.weight = 0;
+        if (ol && ol.style === 'esriSLSNull') st.weight = 0;
+        var oda = ol ? esriDashArray(ol.style, st.weight) : null;
+        if (oda) { st.dashArray = oda; st.lineCap = 'butt'; }
         if (sym.type === 'esriSMS') st.radius = Math.max(3, (sym.size || 8) / 2 * 1.333);
       }
       return st;
@@ -3767,6 +3794,14 @@
               if (isLineFeature(feature)) {
                 out = Object.assign({}, out, { fill: false, fillOpacity: 0 });
                 if (!out.weight) out.weight = 2;   // a line symbol drawn as a zero width outline would vanish
+              }
+              // Line style picked in the publisher: dashed or dotted lines and polygon outlines (not points).
+              var gtype = feature && feature.geometry && feature.geometry.type;
+              if ((o.line_style === 'dashed' || o.line_style === 'dotted') && gtype && !/Point/.test(gtype)) {
+                var lw = Math.max(2, out.weight || 2);
+                out = Object.assign({}, out);
+                if (o.line_style === 'dashed') { out.dashArray = (lw * 4) + ' ' + (lw * 3); out.lineCap = 'butt'; }
+                else { out.dashArray = '1 ' + (lw * 2.2); out.lineCap = 'round'; }
               }
               return out;
             };
@@ -5961,7 +5996,7 @@
       updateTourUrl = function (sid) {
         try {
           var q = new URLSearchParams(window.location.search);
-          q.set('stop', sid);
+          q.set('stop', stopLinkToken(sid));
           ['yaw', 'pitch', 'fov'].forEach(function (k) { q.delete(k); });
           history.replaceState(null, '', window.location.pathname + '?' + q.toString() + window.location.hash);
         } catch (err) {}
@@ -5972,7 +6007,7 @@
       copyLinkBtn.addEventListener('click', function () {
         var q = new URLSearchParams();
         q.set('tour', tourId);
-        if (activeTourSiteId) q.set('stop', activeTourSiteId);
+        if (activeTourSiteId) q.set('stop', stopLinkToken(activeTourSiteId));
         var cur = sceneCache[activeTourSiteId];
         if (cur && !cur.flat && viewL) {
           var pr = viewL.parameters();
@@ -6032,6 +6067,17 @@
           window.helpTourName = shownName;
           window.helpTourIntro = (manifest.intro_note || '').toString().trim();
           var sites = manifest.sites || [];
+          // Links use the stop's display name (Stop 2, IMG_5469). A name shared by two stops, or one with no
+          // letters or digits, falls back to the full site id so every link stays unambiguous.
+          (function () {
+            var counts = {};
+            sites.forEach(function (x) { var k = slugifyStopName(x.display_name || x.site_id); counts[k] = (counts[k] || 0) + 1; });
+            tourStopSlugs = {};
+            sites.forEach(function (x) {
+              var k = slugifyStopName(x.display_name || x.site_id);
+              if (k && counts[k] === 1) tourStopSlugs[x.site_id.trim().toLowerCase().replace(/[\s-]+/g, '_')] = k;
+            });
+          })();
           tourSiteOptions = sites;
 
           var sitesWithGps = sites.filter(s => s.lat != null && s.lng != null);
@@ -6060,6 +6106,13 @@
             var wantSid = stopParam.trim().toLowerCase().replace(/[\s-]+/g, '_');
             for (var si = 0; si < sites.length; si++) {
               if (sites[si].site_id.trim().toLowerCase().replace(/[\s-]+/g, '_') === wantSid) { startIdx = si; stopFound = true; break; }
+            }
+            // Otherwise match on the stop's display name (?stop=stop-2).
+            if (!stopFound) {
+              var wantSlug = slugifyStopName(stopParam);
+              for (var sj = 0; sj < sites.length; sj++) {
+                if (slugifyStopName(sites[sj].display_name || sites[sj].site_id) === wantSlug) { startIdx = sj; stopFound = true; break; }
+              }
             }
           }
           if (!stopFound) pendingStartView = null; // unknown stop: ignore the camera values too

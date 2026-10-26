@@ -131,7 +131,8 @@
       "default_on": true,
       "type": "feature",
       "color": "#000000",
-      "popup": false
+      "popup": false,
+      "line_style": "dashed"
     },
     {
       "label": "Pierce County Hydrography",
