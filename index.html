@@ -418,6 +418,15 @@
     #info-icon svg { width: 17px; height: 17px; stroke: #019fc4; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     #info-title { font-size: 18px; font-weight: 700; color: #ffffff; margin: 0; }
     #info-step-count .tour-name { color: #ffffff; }
+    /* About this tour panel: tour name and date as the banner headline, the note as plain text, quick facts as chips. */
+    .hp-about { text-align: center; padding: 0 24px; max-width: 100%; }
+    .hp-about::before { content: ''; display: block; width: 34px; height: 3px; border-radius: 2px; background: #019fc4; margin: 0 auto 10px; }
+    .hp-about-name { font-size: 21px; font-weight: 700; color: #ffffff; line-height: 1.2; letter-spacing: 0.01em;
+      display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .hp-about-sub { margin-top: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7fd4ea; }
+    .info-about-note { font-size: 14.5px !important; line-height: 1.6 !important; color: #e8eef7 !important; white-space: pre-line; margin: 0 0 12px !important; }
+    #info-body p.info-about-facts { margin: 4px 0 0; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.12);
+      font-size: 12px; color: #9fb2cc; letter-spacing: 0.03em; }
     .info-intro {
       margin: 0 0 10px; padding: 9px 12px; border-radius: 8px;
       background: rgba(1, 159, 196, 0.12); border-left: 3px solid #019fc4;
@@ -942,7 +951,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-26 11:06:39</div>
+  <div id="build-timestamp">Built 2026-10-26 11:36:14</div>
 
   <div id="status-banner"></div>
 
@@ -1990,8 +1999,17 @@
         // The tour's own note (Intro Note in the publisher) gets its own first panel, only when the tour has one.
         var intro = (window.helpTourIntro || '');
         if (intro) {
-          out.push({ title: 'About this tour', icon: STEP_ICONS.about, stage: STAGES.about,
-                     body: '<p class="info-intro"></p>', intro: intro });
+          var info = window.helpTourInfo || {};
+          var facts = [];
+          if (info.stops) facts.push(info.stops + (info.stops === 1 ? ' stop' : ' stops'));
+          if (info.conditions) facts.push(info.conditions);
+          out.push({
+            title: 'About this tour', icon: STEP_ICONS.about, hideName: true, intro: intro,
+            stage: '<div class="hp-about"><div class="hp-about-name">' + escapeHtml(info.name || window.helpTourName || '') + '</div>' +
+                   (info.date ? '<div class="hp-about-sub">' + escapeHtml(info.date) + '</div>' : '') + '</div>',
+            body: '<p class="info-about-note"></p>' +
+                  (facts.length ? '<p class="info-about-facts">' + facts.map(escapeHtml).join(' \u00B7 ') + '</p>' : '')
+          });
         }
         out.push({ title: 'Look around', icon: STEP_ICONS.look, stage: STAGES.look, body: look.join('') });
 
@@ -2092,7 +2110,7 @@
         var s = steps[idx];
         stageEl.innerHTML = s.stage;
         countEl.textContent = '';
-        if (window.helpTourName) {
+        if (window.helpTourName && !s.hideName) {
           var nm = document.createElement('span');
           nm.className = 'tour-name';
           nm.textContent = window.helpTourName;
@@ -2103,7 +2121,7 @@
         document.getElementById('info-icon').innerHTML = s.icon || '';
         titleEl.textContent = s.title;
         bodyEl.innerHTML = s.body;
-        var introEl = bodyEl.querySelector('.info-intro');
+        var introEl = bodyEl.querySelector('.info-intro, .info-about-note');
         if (introEl) introEl.textContent = s.intro;
         bodyEl.classList.remove('swap');
         if (animate) { void bodyEl.offsetWidth; bodyEl.classList.add('swap'); }
@@ -6205,6 +6223,17 @@
           tourNameForTitle = shownName;
           window.helpTourName = shownName;
           window.helpTourIntro = (manifest.intro_note || '').toString().trim();
+          (function () {
+            var full = String(manifest.name || tourId);
+            var pm = full.match(/^(.*?)\s*\(([^()]*)\)\s*$/);
+            var cond = pm ? pm[2].replace(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b|\b\d{4}-\d{2}-\d{2}\b/g, '').replace(/\s*,\s*/g, ', ').replace(/^[\s,]+|[\s,]+$/g, '') : '';
+            var dateLbl = '';
+            if (manifest.field_visit_date) {
+              var dd = new Date(manifest.field_visit_date + 'T00:00:00');
+              if (!isNaN(dd.getTime())) dateLbl = dd.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+            }
+            window.helpTourInfo = { name: pm ? pm[1].trim() : full, date: dateLbl, conditions: cond, stops: (manifest.sites || []).length };
+          })();
           var sites = manifest.sites || [];
           // Links use the stop's display name (Stop 2, IMG_5469). A name shared by two stops, or one with no
           // letters or digits, falls back to the full site id so every link stays unambiguous.

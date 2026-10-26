@@ -1,5 +1,5 @@
 {
-  "name": "Mashel River Site Visit (8.3 cfs)",
+  "name": "Mashel RM 5.1 Site Visit (8.3 cfs)",
   "sites": [
     {
       "site_id": "img_20261023_105334_00_127",
@@ -156,11 +156,12 @@
   "bookmarks": [
     {
       "id": "beaver-dam",
-      "name": "Beaver Dam!",
+      "name": "Beaver Activity!",
       "stops": [
         "img_20261023_111713_00_137"
       ]
     }
   ],
+  "intro_note": "Site Visit to landowner DuWayne Block's Mashel River property to investigate his concerns of migrating riprap from recent Water Treatment Plant bank work.",
   "field_visit_date": "2026-10-23"
 }

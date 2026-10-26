@@ -13,7 +13,7 @@
   "hotspots_1": [
     {
       "yaw": 4.913565455887884,
-      "pitch": 0.0,
+      "pitch": 0,
       "title": "Stop 9 \u00b7 33 m",
       "text": "",
       "link": "",
@@ -21,6 +21,18 @@
       "pin_style": "label_hover",
       "target": "img_20261023_111519_00_136",
       "link_icon": "ground"
+    },
+    {
+      "yaw": 1.4275775103268664,
+      "pitch": 0.08400031553975928,
+      "title": "US View",
+      "text": "Prior to 2024",
+      "link": "",
+      "category": "photo",
+      "pin_style": "dot",
+      "images": [
+        "tiles/img_20261023_111713_00_137/hotspot_images/1793039725674.jpg"
+      ]
     }
   ],
   "hotspots_2": [],

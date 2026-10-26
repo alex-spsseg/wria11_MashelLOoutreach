@@ -6,4 +6,4 @@ Live site: [All tours](https://alex-spsseg.github.io/wria11_MashelLOoutreach/tou
 
 ## Tours
 
-- [Mashel River Site Visit (8.3 cfs)](https://alex-spsseg.github.io/wria11_MashelLOoutreach/index.html?tour=20261023) (visited 2026-10-23, 17 stops)
+- [Mashel RM 5.1 Site Visit (8.3 cfs)](https://alex-spsseg.github.io/wria11_MashelLOoutreach/index.html?tour=20261023) (visited 2026-10-23, 17 stops)
