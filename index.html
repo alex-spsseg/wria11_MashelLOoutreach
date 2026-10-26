@@ -853,6 +853,8 @@
     .tour-bookmark:hover { background: rgba(245, 185, 66, 0.2); }
     .tour-bookmark.active { background: rgba(245, 185, 66, 0.28); font-weight: bold; }
     .tour-bookmark svg { flex: none; fill: #f5b942; }
+    #tour-bookmarks .bm-note { padding: 2px 10px 6px 30px; font-size: 12px; line-height: 1.45; color: #cbd8ec; white-space: pre-line; }
+    #tour-bookmarks .bm-hint { padding: 0 10px 6px 30px; font-size: 11px; color: #9fb2cc; font-style: italic; }
     .tour-bookmark .bm-name { flex: 1; min-width: 0; }
     .tour-bookmark .bm-count { flex: none; color: #9fb2cc; font-size: 11px; font-weight: 400; }
     .tour-map-marker.bm-hl svg { filter: drop-shadow(0 0 3px #f5b942) drop-shadow(0 0 2px #f5b942); }
@@ -973,7 +975,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-26 13:47:13</div>
+  <div id="build-timestamp">Built 2026-10-26 14:17:56</div>
 
   <div id="status-banner"></div>
 
@@ -1211,6 +1213,7 @@
                                  // display labels can differ completely once a
                                  // stop's been renamed in Site Tour Manager)
     var updateLinkAllUndoVisibility = function () {}; // set up once the editing tools exist
+    var tourLoopNav = true; // Prev and Next loop at the ends unless the tour turns it off (manifest loop_nav: false)
     var tourStopSlugs = {}; // normalized site id -> short name for links, e.g. "stop-2"
     function slugifyStopName(n) {
       return String(n || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -1822,18 +1825,25 @@
 
     document.getElementById('autorotate-btn').addEventListener('click', () => toggleAutorotate());
 
-    // Prev/Next: step through the tour's stops in Tour Order, same
-    // sequence Auto-Chain links against -- doesn't wrap at the ends
-    // unless the tour was actually built as a loop (no way to tell
-    // that from here, so both buttons just no-op past either end
-    // rather than guessing).
-    function stepTourStop(delta) {
+    // Prev/Next: step through the tour's stops in Tour Order, the same sequence Auto-Chain links against.
+    // Prev and Next loop: Next on the last stop goes to the first, Prev on the first goes to the last. While a
+    // bookmark is picked they loop through its stops only. noWrap stops at the ends (the local editing tools use it).
+    function stepTourStop(delta, noWrap) {
       if (!tourSiteOptions || !tourLoadStopFn) return;
       var idx = tourSiteOptions.findIndex(s =>
           s.site_id.trim().toLowerCase().replace(/[\s-]+/g, '_') === activeTourSiteId);
       if (idx === -1) return;
-      var next = idx + delta;
-      if (next < 0 || next >= tourSiteOptions.length) return;
+      var n = tourSiteOptions.length;
+      var next = idx, found = false;
+      for (var tries = 0; tries < n; tries++) {
+        next += delta;
+        if (next < 0 || next >= n) {
+          if (noWrap || !tourLoopNav) return;
+          next = (next + n) % n;
+        }
+        if (!bookmarkHitSet || bookmarkHitSet[bmNorm(tourSiteOptions[next].site_id)]) { found = true; break; }
+      }
+      if (!found || next === idx) return;
       tourLoadStopFn(tourSiteOptions[next].site_id);
     }
     document.getElementById('prev-stop-btn').addEventListener('click', () => stepTourStop(-1));
@@ -1930,6 +1940,8 @@
                         '<b>Measure:</b> Click points, or stops, for a distance or area. Esc finishes.'),
         locate: mapIco('<svg class="fill" viewBox="0 0 24 24"><path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>',
                        '<b>My location:</b> Show where you are as a blue dot. Tap again to stop.'),
+        coords: mapIco('<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.5"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></svg>',
+                       '<b>Coordinates:</b> Go to a typed lat, lng, or copy the cursor position. Right click the map to drop a pin.'),
         expand: mapIco('<svg class="fill" viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>',
                        '<b>Bigger:</b> Fill the window with the map. Click again, or press Esc, to shrink it.'),
         grip: mapIco('<svg viewBox="0 0 24 24"><path d="M4 20 20 4M4 14 14 4M10 20 20 10"/></svg>',
@@ -2112,7 +2124,7 @@
               '<ul class="hp-list">' +
                 MAP_HELP_ITEMS.layers +
                 (isShown('prev-stop-btn') ? MAP_HELP_ITEMS.follow + MAP_HELP_ITEMS.fit : MAP_HELP_ITEMS.fit) +
-                (helpTouch ? MAP_HELP_ITEMS.locate : MAP_HELP_ITEMS.measure) +
+                (helpTouch ? MAP_HELP_ITEMS.locate : MAP_HELP_ITEMS.measure + MAP_HELP_ITEMS.coords) +
                 MAP_HELP_ITEMS.expand +
                 (helpTouch ? '' : MAP_HELP_ITEMS.grip) +
               '</ul>'
@@ -4831,7 +4843,7 @@
           if (typeof updateViewCone === 'function') updateViewCone();
           if (advance && document.getElementById('hdg-autoadv').checked) {
             // brief pause so the cone is visible before moving on
-            setTimeout(function () { if (activeTourSiteId === sid) stepTourStop(1); }, 700);
+            setTimeout(function () { if (activeTourSiteId === sid) stepTourStop(1, true); }, 700);
           }
         }).catch(function () { if (btn) flash(btn, 'Save failed', 1800); });
       }
@@ -5627,6 +5639,20 @@
           row.querySelector('.bm-name').textContent = b.name;
           row.addEventListener('click', function () { activateBookmark(b.id, true); });
           bmEl.appendChild(row);
+          if (b.id === activeBookmarkId) {
+            if (b.note) {
+              var noteEl = document.createElement('div');
+              noteEl.className = 'bm-note';
+              noteEl.textContent = b.note;
+              bmEl.appendChild(noteEl);
+            }
+            if (b.stops.length > 1) {
+              var hintEl = document.createElement('div');
+              hintEl.className = 'bm-hint';
+              hintEl.textContent = 'Prev and Next stay within this bookmark.';
+              bmEl.appendChild(hintEl);
+            }
+          }
         });
       }
       function paintBookmarkSidebar() {
@@ -6347,6 +6373,7 @@
           tourNameForTitle = shownName;
           window.helpTourName = shownName;
           window.helpTourIntro = (manifest.intro_note || '').toString().trim();
+          tourLoopNav = manifest.loop_nav !== false;
           (function () {
             var full = String(manifest.name || tourId);
             var pm = full.match(/^(.*?)\s*\(([^()]*)\)\s*$/);
@@ -6383,7 +6410,7 @@
                 if (!present[x] || seen[x]) return false;
                 seen[x] = true; return true;
               });
-              return { id: slugifyStopName((b && b.id) || name), name: name, stops: stops };
+              return { id: slugifyStopName((b && b.id) || name), name: name, stops: stops, note: String((b && b.note) || '').trim() };
             }).filter(function (b) {
               if (!b.name || !b.id || !b.stops.length || seenIds[b.id]) return false;
               seenIds[b.id] = true; return true;
