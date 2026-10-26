@@ -13,7 +13,7 @@
   "hotspots_1": [
     {
       "yaw": 2.897661512363337,
-      "pitch": 0.0,
+      "pitch": 0,
       "title": "IMG_5471 \u00b7 6 m",
       "text": "",
       "link": "",
@@ -24,7 +24,7 @@
     },
     {
       "yaw": 4.188318394870355,
-      "pitch": 0.0,
+      "pitch": 0,
       "title": "Stop 3 \u00b7 34 m",
       "text": "",
       "link": "",
@@ -35,7 +35,7 @@
     },
     {
       "yaw": 0.38421315660780403,
-      "pitch": 0.0,
+      "pitch": 0,
       "title": "Stop 1 \u00b7 45 m",
       "text": "",
       "link": "",
@@ -43,6 +43,18 @@
       "pin_style": "label_hover",
       "target": "img_20261023_105334_00_127",
       "link_icon": "ground"
+    },
+    {
+      "yaw": -0.33628177625770306,
+      "pitch": 0.2374036856435442,
+      "title": "US View",
+      "text": "Prior to 2024",
+      "link": "",
+      "category": "photo",
+      "pin_style": "dot",
+      "images": [
+        "tiles/img_20261023_113919_00_141/hotspot_images/1793046048484.jpg"
+      ]
     }
   ],
   "hotspots_2": [],

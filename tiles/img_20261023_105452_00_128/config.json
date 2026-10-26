@@ -13,7 +13,7 @@
   "hotspots_1": [
     {
       "yaw": 0.07721645802531515,
-      "pitch": 0.0,
+      "pitch": 0,
       "title": "Stop 5 \u00b7 33 m",
       "text": "",
       "link": "",
@@ -24,7 +24,7 @@
     },
     {
       "yaw": 3.2123721752166516,
-      "pitch": 0.0,
+      "pitch": 0,
       "title": "Stop 1 \u00b7 24 m",
       "text": "",
       "link": "",
@@ -35,14 +35,38 @@
     },
     {
       "yaw": 0.11068386485700384,
-      "pitch": 0.0,
-      "title": "Stop 5 \u00b7 35 m",
+      "pitch": 0,
+      "title": "Stop 4 \u00b7 35 m",
       "text": "",
       "link": "",
       "category": "link",
       "pin_style": "label_hover",
       "target": "img_20261023_111012_00_132",
       "link_icon": "ground"
+    },
+    {
+      "yaw": -0.8319203539276767,
+      "pitch": 0.38071364749081127,
+      "title": "RB View",
+      "text": "Prior to 2024",
+      "link": "",
+      "category": "photo",
+      "pin_style": "label_hover",
+      "images": [
+        "tiles/img_20261023_105452_00_128/hotspot_images/1793046176019.jpg"
+      ]
+    },
+    {
+      "yaw": 0.4226601126702594,
+      "pitch": 0.045441099548945374,
+      "title": "US View",
+      "text": "Prior to 2024",
+      "link": "",
+      "category": "photo",
+      "pin_style": "label_hover",
+      "images": [
+        "tiles/img_20261023_105452_00_128/hotspot_images/1793046255070.jpg"
+      ]
     }
   ],
   "hotspots_2": [],

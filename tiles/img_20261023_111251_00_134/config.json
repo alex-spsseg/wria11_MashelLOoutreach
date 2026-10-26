@@ -13,8 +13,8 @@
   "hotspots_1": [
     {
       "yaw": 0.11475763488764916,
-      "pitch": 0.0,
-      "title": "Stop 8 \u00b7 16 m",
+      "pitch": 0,
+      "title": "Stop 7 \u00b7 16 m",
       "text": "",
       "link": "",
       "category": "link",
@@ -24,8 +24,8 @@
     },
     {
       "yaw": 1.391790669152127,
-      "pitch": 0.0,
-      "title": "Stop 12 \u00b7 21 m",
+      "pitch": 0,
+      "title": "Stop 11 \u00b7 21 m",
       "text": "",
       "link": "",
       "category": "link",
@@ -35,14 +35,26 @@
     },
     {
       "yaw": 3.542022269375119,
-      "pitch": 0.0,
-      "title": "Stop 6 \u00b7 32 m",
+      "pitch": 0,
+      "title": "Stop 5 \u00b7 32 m",
       "text": "",
       "link": "",
       "category": "link",
       "pin_style": "label_hover",
       "target": "img_20261023_111143_00_133",
       "link_icon": "ground"
+    },
+    {
+      "yaw": -0.7329568746856623,
+      "pitch": 0.2212369668458951,
+      "title": "DS View",
+      "text": "Prior to 2024",
+      "link": "",
+      "category": "photo",
+      "pin_style": "label_hover",
+      "images": [
+        "tiles/img_20261023_111251_00_134/hotspot_images/1793047507384.jpg"
+      ]
     }
   ],
   "hotspots_2": [],

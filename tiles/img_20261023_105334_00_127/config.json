@@ -13,7 +13,7 @@
   "hotspots_1": [
     {
       "yaw": 1.5493473438901229,
-      "pitch": 0.0,
+      "pitch": 0,
       "title": "Stop 2 \u00b7 24 m",
       "text": "",
       "link": "",
@@ -24,14 +24,26 @@
     },
     {
       "yaw": 3.475363709861683,
-      "pitch": 0.0,
-      "title": "Stop 13 \u00b7 45 m",
+      "pitch": 0,
+      "title": "Stop 12 \u00b7 45 m",
       "text": "",
       "link": "",
       "category": "link",
       "pin_style": "label_hover",
       "target": "img_20261023_113919_00_141",
       "link_icon": "ground"
+    },
+    {
+      "yaw": 0.32303834344228477,
+      "pitch": 0.4513068206421398,
+      "title": "RB View",
+      "text": "Prior to 2024",
+      "link": "",
+      "category": "photo",
+      "pin_style": "label_hover",
+      "images": [
+        "tiles/img_20261023_105334_00_127/hotspot_images/1793046121446.jpg"
+      ]
     }
   ],
   "hotspots_2": [],
