@@ -30,13 +30,13 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <title>WRIA 11 — Mas Hello Outreach</title>
+  <title>WRIA 11 - Mashel River Landowner Outreach</title>
   <!-- Link previews (Slack, Teams, email, text messages) read these static tags, since they do
        not run the page's JavaScript. Filled from the repo's Tours Page Settings title and description. -->
   <meta name="description" content="Interactive 360 degree site tours.">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="WRIA 11 — Mas Hello Outreach">
-  <meta property="og:title" content="WRIA 11 — Mas Hello Outreach">
+  <meta property="og:site_name" content="WRIA 11 - Mashel River Landowner Outreach">
+  <meta property="og:title" content="WRIA 11 - Mashel River Landowner Outreach">
   <meta property="og:description" content="Interactive 360 degree site tours.">
   <meta name="twitter:card" content="summary">
   <style>
@@ -809,6 +809,22 @@
     .tour-stop-link.unsaved::after { margin-left: 6px; }
     .tour-stop-link:hover { background: rgba(1, 159, 196, 0.3); }
     .tour-stop-link.active { background: #019fc4; font-weight: bold; }
+    /* Bookmarks: a named group of stops. Stops in the active bookmark get a gold edge; the rest fade. */
+    .tour-stop-link.bm-hit { box-shadow: inset 3px 0 0 #f5b942; }
+    .tour-stop-link.bm-dim:not(.active) { opacity: 0.4; }
+    #tour-bookmarks { display: none; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.15); }
+    #tour-bookmarks .bm-head { display: flex; align-items: center; justify-content: space-between; color: #9fb2cc;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+    #tour-bookmarks .bm-clear { background: none; border: 1px solid rgba(245,185,66,0.7); color: #f5b942; border-radius: 4px;
+      font-size: 10px; padding: 1px 6px; cursor: pointer; text-transform: none; letter-spacing: 0; }
+    .tour-bookmark { color: #ffffff; padding: 7px 10px; border-radius: 4px; cursor: pointer; font-size: 13px; margin-bottom: 3px;
+      display: flex; align-items: center; gap: 8px; transition: background 0.15s ease; }
+    .tour-bookmark:hover { background: rgba(245, 185, 66, 0.2); }
+    .tour-bookmark.active { background: rgba(245, 185, 66, 0.28); font-weight: bold; }
+    .tour-bookmark svg { flex: none; fill: #f5b942; }
+    .tour-bookmark .bm-name { flex: 1; min-width: 0; }
+    .tour-bookmark .bm-count { flex: none; color: #9fb2cc; font-size: 11px; font-weight: 400; }
+    .tour-map-marker.bm-hl svg { filter: drop-shadow(0 0 3px #f5b942) drop-shadow(0 0 2px #f5b942); }
     /* Local preview: this stop has hotspot edits not yet written to disk. */
     .leaflet-popup-content-wrapper { background: #132447; color: #e8eef7; border: 1px solid #1b3f95;
       border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.45); }
@@ -926,7 +942,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-26 10:43:26</div>
+  <div id="build-timestamp">Built 2026-10-26 10:45:55</div>
 
   <div id="status-banner"></div>
 
@@ -2990,6 +3006,11 @@
     // pin can be re-styled without rebuilding the whole map when the
     // person switches stops while the map panel is open.
     var tourMarkersBySite = {};
+    // Active bookmark: normalized site ids of its stops, or null when none is active.
+    var bookmarkHitSet = null;
+    function bmNorm(x) { return String(x).trim().toLowerCase().replace(/[\s-]+/g, '_'); }
+    function bmHit(sid) { return !!bookmarkHitSet && !!bookmarkHitSet[bmNorm(sid)]; }
+    function bmOpacity(sid) { return bookmarkHitSet ? (bmHit(sid) ? 1 : 0.35) : 1; }
     // Touch screens: the row of map buttons sits across the top of the map panel, so a stop centred in the panel
     // can end up under a button. mapCenterFor() shifts the centre so the stop shows left of and below the middle.
     var MAP_TOUCH = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
@@ -3060,11 +3081,11 @@
       return !!(opt && opt.platform === 'aerial');
     }
 
-    function buildMarkerIcon(active, aerial, overview, float) {
+    function buildMarkerIcon(active, aerial, overview, float, hl) {
       var size = active ? 30 : 22;
       var color = active ? '#019fc4' : '#3f5a78';
       return L.divIcon({
-        className: 'tour-map-marker' + (active ? ' active' : ''),
+        className: 'tour-map-marker' + (active ? ' active' : '') + (hl ? ' bm-hl' : ''),
         html: '<svg width="' + size + '" height="' + Math.round(size * 1.33) + '" viewBox="0 0 24 32" ' +
               'xmlns="http://www.w3.org/2000/svg">' +
               '<path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20c0-6.6-5.4-12-12-12z" ' +
@@ -3538,11 +3559,30 @@
     // isn't actively panning (harmless, just a cheap no-op redraw).
     setInterval(updateViewCone, 200);
 
+    // Re-style every pin for the active bookmark (or back to normal when none is active).
+    function refreshBookmarkMarkers() {
+      Object.keys(tourMarkersBySite).forEach(function (sid) {
+        var m = tourMarkersBySite[sid];
+        m.setIcon(buildMarkerIcon(sid === activeTourSiteId, isAerialSite(sid), isOverviewSite(sid), isFloatSite(sid), bmHit(sid)));
+        m.setOpacity(bmOpacity(sid));
+        if (sid === activeTourSiteId) m.setZIndexOffset(1000);
+      });
+      if (markerClusterGroup && markerClusterGroup.refreshClusters) markerClusterGroup.refreshClusters();
+    }
+    function bookmarkLatLngs(stops) {
+      var want = {};
+      stops.forEach(function (x) { want[bmNorm(x)] = true; });
+      var out = [];
+      Object.keys(tourMarkersBySite).forEach(function (sid) { if (want[bmNorm(sid)]) out.push(tourMarkersBySite[sid].getLatLng()); });
+      return out;
+    }
+
     function updateActiveMapMarker() {
       Object.keys(tourMarkersBySite).forEach(sid => {
         var m = tourMarkersBySite[sid];
         var active = sid === activeTourSiteId;
-        m.setIcon(buildMarkerIcon(active, isAerialSite(sid), isOverviewSite(sid), isFloatSite(sid)));
+        m.setIcon(buildMarkerIcon(active, isAerialSite(sid), isOverviewSite(sid), isFloatSite(sid), bmHit(sid)));
+        m.setOpacity(bmOpacity(sid));
         if (active) m.setZIndexOffset(1000);
       });
       // Cluster icons are separate from the child markers' own icons,
@@ -3565,7 +3605,7 @@
         // The first stop shown keeps the whole site view for orientation; after
         // that, picking a stop zooms the map in to it (never zooms back out).
         if (changed && !firstStop && autoZoomStops) zoomMapToStop(activeMarker.getLatLng());
-        else siteMap.panTo(mapCenterFor(activeMarker.getLatLng()));
+        else if (!(bookmarkHitSet && firstStop)) siteMap.panTo(mapCenterFor(activeMarker.getLatLng())); // a bookmark's framing wins on first load
       }
     }
 
@@ -4294,7 +4334,7 @@
         if (useCluster) markerClusterGroup = L.markerClusterGroup({ maxClusterRadius: 40, disableClusteringAtZoom: startZoom });
         pendingMapData.sites.forEach(s => {
           var isActive = s.site_id === activeTourSiteId;
-          var m = L.marker([s.lat, s.lng], { icon: buildMarkerIcon(isActive, s.platform === 'aerial', !!s.overview, s.platform === 'float') });
+          var m = L.marker([s.lat, s.lng], { icon: buildMarkerIcon(isActive, s.platform === 'aerial', !!s.overview, s.platform === 'float', bmHit(s.site_id)), opacity: bmOpacity(s.site_id) });
           // The stop name is a small label on hover, and on tap for touch screens. There is no click
           // popup any more: it covered the map and had to be closed by hand after every stop.
           m.bindTooltip(escapeHtml(s.display_name || s.site_id), { direction: 'top', className: 'stop-tooltip', opacity: 1 });
@@ -5370,6 +5410,10 @@
       titleEl.textContent = 'Loading\u2026';
       sidebar.appendChild(titleEl);
 
+      var bmEl = document.createElement('div');
+      bmEl.id = 'tour-bookmarks';
+      sidebar.appendChild(bmEl);
+
       var listEl = document.createElement('div');
       listEl.id = 'tour-sidebar-list';
       sidebar.appendChild(listEl);
@@ -5390,6 +5434,87 @@
       // otherwise ever turn it back on.
       var tourHasMap = false;
       var activeLink = null;
+
+      // -- bookmarks: named groups of stops (like an ArcGIS Online bookmark) --------------------
+      // manifest.bookmarks = [{ id, name, stops: [site_id, ...] }]. Stops are stored by their permanent site id,
+      // so renaming or renumbering stops never breaks a bookmark. Picking one frames those stops on the map,
+      // highlights them in the sidebar and on the map, and fades the rest. ?bookmark=<id> opens a tour that way.
+      var tourBookmarkList = [];
+      var activeBookmarkId = null;
+      function setBookmarkUrl(id) {
+        try {
+          var q = new URLSearchParams(window.location.search);
+          if (id) q.set('bookmark', id); else q.delete('bookmark');
+          history.replaceState(null, '', window.location.pathname + '?' + q.toString() + window.location.hash);
+        } catch (err) {}
+      }
+      function renderBookmarkList() {
+        bmEl.innerHTML = '';
+        if (!tourBookmarkList.length) { bmEl.style.display = 'none'; return; }
+        bmEl.style.display = 'block';
+        var head = document.createElement('div');
+        head.className = 'bm-head';
+        var ht = document.createElement('span');
+        ht.textContent = 'Bookmarks';
+        head.appendChild(ht);
+        if (activeBookmarkId) {
+          var clr = document.createElement('button');
+          clr.type = 'button'; clr.className = 'bm-clear'; clr.textContent = 'Show all';
+          clr.addEventListener('click', function (e) { e.stopPropagation(); clearBookmark(); });
+          head.appendChild(clr);
+        }
+        bmEl.appendChild(head);
+        tourBookmarkList.forEach(function (b) {
+          var row = document.createElement('div');
+          row.className = 'tour-bookmark' + (b.id === activeBookmarkId ? ' active' : '');
+          row.innerHTML = '<svg width="12" height="14" viewBox="0 0 24 24"><path d="M6 2h12a1 1 0 0 1 1 1v19l-7-4-7 4V3a1 1 0 0 1 1-1z"/></svg>' +
+                          '<span class="bm-name"></span><span class="bm-count">' + b.stops.length + '</span>';
+          row.querySelector('.bm-name').textContent = b.name;
+          row.addEventListener('click', function () { activateBookmark(b.id, true); });
+          bmEl.appendChild(row);
+        });
+      }
+      function paintBookmarkSidebar() {
+        Object.keys(siteLinkElements).forEach(function (k) {
+          var el = siteLinkElements[k];
+          el.classList.toggle('bm-hit', !!bookmarkHitSet && !!bookmarkHitSet[k]);
+          el.classList.toggle('bm-dim', !!bookmarkHitSet && !bookmarkHitSet[k]);
+        });
+      }
+      function activateBookmark(id, doFit) {
+        var bm = null;
+        tourBookmarkList.forEach(function (b) { if (b.id === id) bm = b; });
+        if (!bm) return;
+        activeBookmarkId = id;
+        bookmarkHitSet = {};
+        bm.stops.forEach(function (x) { bookmarkHitSet[x] = true; });
+        paintBookmarkSidebar();
+        renderBookmarkList();
+        setBookmarkUrl(id);
+        refreshBookmarkMarkers();
+        if (doFit && tourHasMap) {
+          var pts = bookmarkLatLngs(bm.stops);
+          if (pts.length) {
+            if (siteMapPanel.style.display === 'none' || !siteMapPanel.style.display) openSiteMap();
+            // The panel may have only just opened, so give the map a moment to measure itself first.
+            setTimeout(function () {
+              if (!siteMap || activeBookmarkId !== id) return;
+              siteMap.invalidateSize();
+              if (pts.length === 1) zoomMapToStop(pts[0]);
+              else siteMap.fitBounds(L.latLngBounds(pts), { padding: [40, 40], maxZoom: 19 });
+            }, 90);
+          }
+        }
+      }
+      function clearBookmark() {
+        activeBookmarkId = null;
+        bookmarkHitSet = null;
+        paintBookmarkSidebar();
+        renderBookmarkList();
+        setBookmarkUrl(null);
+        refreshBookmarkMarkers();
+        if (siteMap && lastMapFit && siteMapPanel.style.display !== 'none') lastMapFit();
+      }
 
       // -- flat (non-pano) tour stops -----------------------------------
       // A stop published via "Flat image or PDF" (see write_flat_config
@@ -6008,6 +6133,7 @@
         var q = new URLSearchParams();
         q.set('tour', tourId);
         if (activeTourSiteId) q.set('stop', stopLinkToken(activeTourSiteId));
+        if (activeBookmarkId) q.set('bookmark', activeBookmarkId);
         var cur = sceneCache[activeTourSiteId];
         if (cur && !cur.flat && viewL) {
           var pr = viewL.parameters();
@@ -6079,6 +6205,25 @@
             });
           })();
           tourSiteOptions = sites;
+          // Bookmarks: keep only stops this tour still has, and drop any bookmark left empty.
+          (function () {
+            var present = {};
+            sites.forEach(function (x) { present[bmNorm(x.site_id)] = true; });
+            var seenIds = {};
+            tourBookmarkList = (manifest.bookmarks || []).map(function (b) {
+              var name = String((b && b.name) || '').trim();
+              var seen = {};
+              var stops = ((b && b.stops) || []).map(bmNorm).filter(function (x) {
+                if (!present[x] || seen[x]) return false;
+                seen[x] = true; return true;
+              });
+              return { id: slugifyStopName((b && b.id) || name), name: name, stops: stops };
+            }).filter(function (b) {
+              if (!b.name || !b.id || !b.stops.length || seenIds[b.id]) return false;
+              seenIds[b.id] = true; return true;
+            });
+            renderBookmarkList();
+          })();
 
           var sitesWithGps = sites.filter(s => s.lat != null && s.lng != null);
           tourHasMap = sitesWithGps.length > 0;
@@ -6116,6 +6261,18 @@
             }
           }
           if (!stopFound) pendingStartView = null; // unknown stop: ignore the camera values too
+          // ?bookmark=<id>: open the tour framed on that bookmark, starting at its first stop unless a stop was named.
+          var startBm = null;
+          var bmParam = urlParams.get('bookmark');
+          if (bmParam) {
+            var wantBm = slugifyStopName(bmParam);
+            tourBookmarkList.forEach(function (b) { if (b.id === wantBm) startBm = b; });
+            if (startBm && !stopFound) {
+              for (var bi = 0; bi < sites.length; bi++) {
+                if (bmNorm(sites[bi].site_id) === startBm.stops[0]) { startIdx = bi; break; }
+              }
+            }
+          }
           if (sites[startIdx]) pendingStartSid = sites[startIdx].site_id.trim().toLowerCase().replace(/[\s-]+/g, '_');
           sites.forEach((s, idx) => {
             var link = document.createElement('div');
@@ -6135,6 +6292,7 @@
             listEl.appendChild(link);
             if (idx === startIdx) loadStop(s.site_id);
           });
+          if (startBm) activateBookmark(startBm.id, true);
           if (!sites.length) {
             var empty = document.createElement('div');
             empty.className = 'tour-sidebar-error';
