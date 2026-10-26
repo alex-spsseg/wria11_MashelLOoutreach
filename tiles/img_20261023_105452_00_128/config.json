@@ -1,0 +1,50 @@
+{
+  "mode": "single",
+  "format": "raw",
+  "yaw_1": 0.0,
+  "pitch_1": 0.0,
+  "yaw_2": 0.0,
+  "pitch_2": 0.0,
+  "lat": 46.857632153778944,
+  "lng": -122.27396161540385,
+  "label_1": "IMG_20261023_105452_00_128 (2026/10/23)",
+  "label_2": "",
+  "autorotate": false,
+  "hotspots_1": [
+    {
+      "yaw": 3.2123721752166516,
+      "pitch": 0.0,
+      "title": "Stop 1 \u00b7 24 m",
+      "text": "",
+      "link": "",
+      "category": "link",
+      "pin_style": "label_hover",
+      "target": "img_20261023_105334_00_127",
+      "link_icon": "ground"
+    },
+    {
+      "yaw": 0.07721645802531515,
+      "pitch": 0.0,
+      "title": "Stop 5 \u00b7 33 m",
+      "text": "",
+      "link": "",
+      "category": "link",
+      "pin_style": "label_hover",
+      "target": "img_20261023_110947_00_131",
+      "link_icon": "ground"
+    }
+  ],
+  "hotspots_2": [],
+  "levels_1": [],
+  "levels_2": [],
+  "pin_style": "dot",
+  "basemap_type": "xyz_tile",
+  "basemap_url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+  "mobile_1": 5000,
+  "mobile_2": 0,
+  "heading_offset": 71.62776521641729,
+  "overlays": [],
+  "alt_checked": true,
+  "alt": 214.73,
+  "heading_confirmed": true
+}

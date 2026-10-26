@@ -1,0 +1,61 @@
+{
+  "mode": "single",
+  "format": "raw",
+  "yaw_1": 0.0,
+  "pitch_1": 0.0,
+  "yaw_2": 0.0,
+  "pitch_2": 0.0,
+  "lat": 46.85766275001902,
+  "lng": -122.27298849996647,
+  "label_1": "IMG_20261023_111143_00_133 (2026/10/23)",
+  "label_2": "",
+  "autorotate": false,
+  "hotspots_1": [
+    {
+      "yaw": 5.431640650822351,
+      "pitch": 0.0,
+      "title": "Stop 8 \u00b7 32 m",
+      "text": "",
+      "link": "",
+      "category": "link",
+      "pin_style": "label_hover",
+      "target": "img_20261023_111251_00_134",
+      "link_icon": "ground"
+    },
+    {
+      "yaw": 2.519696076929757,
+      "pitch": 0.0,
+      "title": "Stop 6 \u00b7 39 m",
+      "text": "",
+      "link": "",
+      "category": "link",
+      "pin_style": "label_hover",
+      "target": "img_20261023_111012_00_132",
+      "link_icon": "ground"
+    },
+    {
+      "yaw": 5.820211885112591,
+      "pitch": 0.0,
+      "title": "Stop 13 \u00b7 47 m",
+      "text": "",
+      "link": "",
+      "category": "link",
+      "pin_style": "label_hover",
+      "target": "img_20261023_112752_00_140",
+      "link_icon": "ground"
+    }
+  ],
+  "hotspots_2": [],
+  "levels_1": [],
+  "levels_2": [],
+  "pin_style": "dot",
+  "basemap_type": "xyz_tile",
+  "basemap_url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+  "mobile_1": 5000,
+  "mobile_2": 0,
+  "heading_offset": 131.43295724735412,
+  "overlays": [],
+  "alt_checked": true,
+  "alt": 222.12,
+  "heading_confirmed": true
+}
